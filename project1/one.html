@@ -3,235 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>발표자 뽑기</title>
+    <title>지구의 자전과 공전 학습지</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 뽑기 완료 시 나타나는 팝 애니메이션 */
-        @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); color: #2563eb; } /* 파란색으로 강조 */
-            100% { transform: scale(1); color: #1f2937; } /* 원래 색으로 복귀 */
-        }
-        .animate-pop {
-            animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        
-        /* 롤링 이펙트 시 살짝 투명해지는 효과 */
-        .rolling {
-            opacity: 0.7;
-            filter: blur(1px);
-        }
-
-        /* 폰트 설정 */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        /* 기본 폰트 및 트랜지션 설정 */
+        body { font-family: 'Inter', 'Malgun Gothic', sans-serif; }
+        .transition-all { transition: all 0.3s ease; }
     </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col justify-between text-gray-800">
+<body class="bg-gray-50 text-gray-800 min-h-screen py-10 px-4 flex justify-center items-start">
 
-    <!-- 상단 설정 패널 -->
-    <header class="p-6 flex justify-center z-10 relative">
-        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6 shadow-sm w-full max-w-4xl flex flex-col md:flex-row gap-6 items-end">
-            
-            <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- 전체 번호 입력 -->
-                <div>
-                    <label for="maxNum" class="block text-sm font-semibold text-gray-700 mb-1">총 인원 수 (최대 번호)</label>
-                    <input type="number" id="maxNum" min="1" placeholder="예: 30" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow">
+    <!-- 메인 컨테이너 -->
+    <main class="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-lg">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-extrabold text-blue-600 mb-2">지구의 자전과 공전</h1>
+            <p class="text-gray-500">과학 학습지 - 알맞은 답을 선택하거나 적어주세요.</p>
+        </header>
+        
+        <form id="worksheetForm" class="space-y-8">
+            <!-- 1. 인적사항 영역 -->
+            <section class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                <h2 class="text-lg font-bold text-blue-800 mb-4">학생 정보</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label for="grade" class="block text-sm font-semibold text-gray-700 mb-1">학년</label>
+                        <input type="number" id="grade" name="grade" required min="1" max="6" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div>
+                        <label for="classNum" class="block text-sm font-semibold text-gray-700 mb-1">반</label>
+                        <input type="number" id="classNum" name="classNum" required min="1" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div>
+                        <label for="studentNum" class="block text-sm font-semibold text-gray-700 mb-1">번호</label>
+                        <input type="number" id="studentNum" name="studentNum" required min="1" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div>
+                        <label for="name" class="block text-sm font-semibold text-gray-700 mb-1">이름</label>
+                        <input type="text" id="name" name="name" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
                 </div>
+            </section>
+
+            <!-- 2. 객관식 문제 영역 -->
+            <section class="space-y-6">
+                <h2 class="text-xl font-bold text-gray-800 border-b pb-2">객관식 문제</h2>
                 
-                <!-- 제외할 번호 입력 -->
-                <div>
-                    <label for="excludeNums" class="block text-sm font-semibold text-gray-700 mb-1">제외할 번호 (쉼표로 구분)</label>
-                    <input type="text" id="excludeNums" placeholder="예: 4, 13, 22" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow">
+                <!-- 문제 1 -->
+                <div class="p-4 hover:bg-gray-50 rounded-lg transition-all">
+                    <p class="font-bold text-lg mb-3">1. 지구의 자전 방향으로 가장 알맞은 것은 무엇입니까?</p>
+                    <div class="space-y-2 pl-2">
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q1" value="동에서 서" required class="w-4 h-4 text-blue-600"> <span class="ml-2">① 동에서 서</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q1" value="서에서 동" class="w-4 h-4 text-blue-600"> <span class="ml-2">② 서에서 동</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q1" value="남에서 북" class="w-4 h-4 text-blue-600"> <span class="ml-2">③ 남에서 북</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q1" value="북에서 남" class="w-4 h-4 text-blue-600"> <span class="ml-2">④ 북에서 남</span></label>
+                    </div>
                 </div>
+
+                <!-- 문제 2 -->
+                <div class="p-4 hover:bg-gray-50 rounded-lg transition-all">
+                    <p class="font-bold text-lg mb-3">2. 지구가 태양 주위를 도는 '공전'으로 인해 생기는 현상은 무엇입니까?</p>
+                    <div class="space-y-2 pl-2">
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q2" value="낮과 밤의 반복" required class="w-4 h-4 text-blue-600"> <span class="ml-2">① 낮과 밤의 반복</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q2" value="밀물과 썰물" class="w-4 h-4 text-blue-600"> <span class="ml-2">② 밀물과 썰물</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q2" value="계절의 변화" class="w-4 h-4 text-blue-600"> <span class="ml-2">③ 계절의 변화</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q2" value="오로라 발생" class="w-4 h-4 text-blue-600"> <span class="ml-2">④ 오로라 발생</span></label>
+                    </div>
+                </div>
+
+                <!-- 문제 3 -->
+                <div class="p-4 hover:bg-gray-50 rounded-lg transition-all">
+                    <p class="font-bold text-lg mb-3">3. 지구가 태양을 한 바퀴 도는 데 걸리는 시간(공전 주기)은 얼마입니까?</p>
+                    <div class="space-y-2 pl-2">
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q3" value="하루(약 24시간)" required class="w-4 h-4 text-blue-600"> <span class="ml-2">① 하루 (약 24시간)</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q3" value="한 달(약 30일)" class="w-4 h-4 text-blue-600"> <span class="ml-2">② 한 달 (약 30일)</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q3" value="일 년(약 365일)" class="w-4 h-4 text-blue-600"> <span class="ml-2">③ 일 년 (약 365일)</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="q3" value="십 년" class="w-4 h-4 text-blue-600"> <span class="ml-2">④ 십 년</span></label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. 주관식 문제 영역 -->
+            <section class="space-y-6">
+                <h2 class="text-xl font-bold text-gray-800 border-b pb-2">주관식 문제</h2>
                 
-                <!-- 체크박스 영역 -->
-                <div class="md:col-span-2 flex items-center gap-6 mt-2">
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="allowDuplicates" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
-                        <span class="text-sm font-medium text-gray-700 group-hover:text-black">중복 뽑기 허용</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="showEffect" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
-                        <span class="text-sm font-medium text-gray-700 group-hover:text-black">뽑기 효과(애니메이션) 사용</span>
-                    </label>
+                <!-- 문제 4 -->
+                <div class="p-4 hover:bg-gray-50 rounded-lg transition-all">
+                    <p class="font-bold text-lg mb-3">4. 지구가 자전축을 중심으로 하루에 한 바퀴씩 스스로 도는 운동을 무엇이라고 합니까?</p>
+                    <input type="text" name="q4" required placeholder="정답을 입력하세요" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
                 </div>
-            </div>
 
-            <!-- 뽑기 버튼 -->
-            <button id="drawBtn" class="w-full md:w-auto px-10 py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 whitespace-nowrap text-lg">
-                발표자 뽑기
-            </button>
-        </div>
-    </header>
+                <!-- 문제 5 -->
+                <div class="p-4 hover:bg-gray-50 rounded-lg transition-all">
+                    <p class="font-bold text-lg mb-3">5. 지구 자전으로 인해 태양이나 별과 같은 천체들이 매일 동쪽에서 떠서 서쪽으로 지는 것처럼 보이는 현상을 무엇이라고 합니까?</p>
+                    <input type="text" name="q5" required placeholder="정답을 입력하세요" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+            </section>
 
-    <!-- 에러 메시지 표시 영역 -->
-    <div id="errorBox" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-700 px-6 py-3 rounded-full font-semibold shadow-md transition-opacity opacity-0 pointer-events-none z-50">
-        에러 메시지
-    </div>
-
-    <!-- 메인 화면 (번호 출력) -->
-    <main class="flex-1 flex items-center justify-center relative px-4 overflow-hidden">
-        <div id="resultDisplay" class="text-[12rem] md:text-[20rem] font-black text-gray-800 tracking-tighter leading-none select-none transition-colors duration-200">
-            ?
-        </div>
-    </main>
-
-    <!-- 하단 기록 패널 -->
-    <footer class="p-6 bg-white border-t border-gray-100 flex flex-col items-center z-10 relative">
-        <div class="w-full max-w-4xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">뽑힌 기록</h3>
-                <button id="resetHistoryBtn" class="text-sm text-gray-500 hover:text-red-500 font-medium transition-colors">
-                    기록 초기화
+            <!-- 제출 버튼 -->
+            <div class="pt-6">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all text-lg flex items-center justify-center">
+                    제출하기
                 </button>
             </div>
-            <div id="historyList" class="flex flex-wrap gap-2 min-h-[3rem]">
-                <span class="text-gray-400 text-sm italic py-2">아직 뽑힌 번호가 없습니다.</span>
-            </div>
+        </form>
+    </main>
+
+    <!-- 메시지 모달 (alert 대체용) -->
+    <div id="messageModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+            <div id="modalIcon" class="text-4xl mb-4">✅</div>
+            <h3 id="modalTitle" class="text-xl font-bold mb-2">제출 완료</h3>
+            <p id="modalMessage" class="text-gray-600 mb-6">학습지가 성공적으로 제출되었습니다.</p>
+            <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-all">확인</button>
         </div>
-    </footer>
+    </div>
 
-    <!-- 자바스크립트 로직 -->
-    <script>
-        const drawBtn = document.getElementById('drawBtn');
-        const resultDisplay = document.getElementById('resultDisplay');
-        const historyList = document.getElementById('historyList');
-        const errorBox = document.getElementById('errorBox');
+    <!-- Firebase 및 로직 -->
+    <script type="module">
+        // Firebase SDK import (CDN에서 404 방지를 위해 존재하는 11.6.1 버전 사용)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 사용자가 제공한 Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPvVKjUZUbzsog7K9qSkl3-JLIVs-_RB8",
+            authDomain: "computing-3ed50.firebaseapp.com",
+            projectId: "computing-3ed50",
+            storageBucket: "computing-3ed50.firebasestorage.app",
+            messagingSenderId: "345956328287",
+            appId: "1:345956328287:web:3b702bce02f81ba2298cea",
+            measurementId: "G-EQ2CVT5YHJ"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // DOM 요소 가져오기
+        const form = document.getElementById('worksheetForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageModal = document.getElementById('messageModal');
         
-        let history = [];
-        let isAnimating = false;
+        // 모달 제어 함수
+        window.showModal = (title, message, isSuccess = true) => {
+            document.getElementById('modalIcon').innerText = isSuccess ? '✅' : '❌';
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            messageModal.classList.remove('hidden');
+        };
 
-        // 에러 메시지 표시용 유틸리티 함수
-        function showError(message) {
-            errorBox.textContent = message;
-            errorBox.classList.remove('opacity-0');
-            setTimeout(() => {
-                errorBox.classList.add('opacity-0');
-            }, 3000);
-        }
+        window.closeModal = () => {
+            messageModal.classList.add('hidden');
+        };
 
-        // 뽑힌 기록 UI 업데이트
-        function updateHistoryUI() {
-            if (history.length === 0) {
-                historyList.innerHTML = '<span class="text-gray-400 text-sm italic py-2">아직 뽑힌 번호가 없습니다.</span>';
-                return;
-            }
+        // 폼 제출 이벤트
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // 기본 새로고침 방지
 
-            historyList.innerHTML = '';
-            history.forEach((num, index) => {
-                const badge = document.createElement('div');
-                badge.className = 'px-4 py-2 bg-blue-50 border border-blue-100 text-blue-700 font-bold rounded-lg shadow-sm animate-fade-in';
+            // 버튼 상태 변경 (로딩)
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                전송 중...
+            `;
+            submitBtn.classList.replace('bg-blue-600', 'bg-blue-400');
+
+            // 폼 데이터 추출
+            const formData = new FormData(form);
+            const studentData = {
+                grade: formData.get('grade'),
+                classNum: formData.get('classNum'),
+                studentNum: formData.get('studentNum'),
+                name: formData.get('name'),
+                answers: {
+                    q1: formData.get('q1'),
+                    q2: formData.get('q2'),
+                    q3: formData.get('q3'),
+                    q4: formData.get('q4'),
+                    q5: formData.get('q5')
+                },
+                timestamp: serverTimestamp() // 서버 시간 기록
+            };
+
+            try {
+                // Firestore의 'science_worksheets' 컬렉션에 데이터 저장
+                await addDoc(collection(db, "science_worksheets"), studentData);
                 
-                // 순서 번호 추가 (옵션)
-                const orderText = document.createElement('span');
-                orderText.className = 'text-xs text-blue-400 mr-1 font-normal';
-                orderText.textContent = `${index + 1}번째:`;
-                
-                const numText = document.createElement('span');
-                numText.textContent = num;
+                // 성공 처리
+                showModal("제출 완료!", "학습지가 성공적으로 제출되었습니다.", true);
+                form.reset(); // 입력 폼 초기화
 
-                badge.appendChild(orderText);
-                badge.appendChild(numText);
-                historyList.appendChild(badge);
-            });
-        }
-
-        // 초기화 버튼 이벤트
-        document.getElementById('resetHistoryBtn').addEventListener('click', () => {
-            history = [];
-            resultDisplay.textContent = '?';
-            resultDisplay.classList.remove('animate-pop');
-            updateHistoryUI();
-        });
-
-        // 뽑기 메인 로직
-        drawBtn.addEventListener('click', () => {
-            if (isAnimating) return;
-
-            const maxNumVal = document.getElementById('maxNum').value;
-            const maxNum = parseInt(maxNumVal);
-            const excludeStr = document.getElementById('excludeNums').value;
-            const allowDuplicates = document.getElementById('allowDuplicates').checked;
-            const showEffect = document.getElementById('showEffect').checked;
-
-            if (isNaN(maxNum) || maxNum < 1) {
-                showError('총 인원 수에 올바른 숫자를 입력해주세요.');
-                return;
-            }
-
-            // 제외할 번호 파싱
-            const excludeArr = excludeStr.split(',')
-                .map(s => parseInt(s.trim()))
-                .filter(n => !isNaN(n));
-
-            // 후보군 생성
-            let candidates = [];
-            for (let i = 1; i <= maxNum; i++) {
-                if (excludeArr.includes(i)) continue; // 제외 번호 패스
-                
-                if (!allowDuplicates && history.includes(i)) continue; // 중복 미허용 시 패스
-
-                candidates.push(i);
-            }
-
-            // 뽑을 수 있는 번호가 없는 경우
-            if (candidates.length === 0) {
-                showError('뽑을 수 있는 번호가 없습니다. 조건을 확인해주세요.');
-                return;
-            }
-
-            resultDisplay.classList.remove('animate-pop');
-            
-            // 최종 당첨 번호 설정
-            const finalIndex = Math.floor(Math.random() * candidates.length);
-            const finalNumber = candidates[finalIndex];
-
-            if (showEffect) {
-                isAnimating = true;
-                drawBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                resultDisplay.classList.add('rolling');
-
-                let ticks = 0;
-                // AI가 판단한 이펙트: 룰렛처럼 번호가 빠르게 바뀌다가 최종 번호에 멈춤
-                const maxTicks = 25; // 숫자가 바뀌는 횟수
-                const baseInterval = 40; // 바뀌는 기본 속도
-                
-                const rolling = setInterval(() => {
-                    // 무작위로 화면에 임시 번호 표시
-                    const randomTemp = candidates[Math.floor(Math.random() * candidates.length)];
-                    resultDisplay.textContent = randomTemp;
-                    ticks++;
-
-                    if (ticks >= maxTicks) {
-                        clearInterval(rolling);
-                        finishDraw(finalNumber);
-                    }
-                }, baseInterval);
-            } else {
-                finishDraw(finalNumber);
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                // 에러 처리
+                showModal("제출 실패", "네트워크 오류가 발생했습니다. 선생님께 문의하세요.", false);
+            } finally {
+                // 버튼 상태 복구
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '제출하기';
+                submitBtn.classList.replace('bg-blue-400', 'bg-blue-600');
             }
         });
-
-        // 뽑기 완료 후 처리 함수
-        function finishDraw(number) {
-            resultDisplay.classList.remove('rolling');
-            resultDisplay.textContent = number;
-            
-            // 리플로우(Reflow)를 발생시켜 애니메이션 재시작
-            void resultDisplay.offsetWidth; 
-            
-            resultDisplay.classList.add('animate-pop');
-            
-            history.push(number);
-            updateHistoryUI();
-            
-            isAnimating = false;
-            drawBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
     </script>
 </body>
 </html>

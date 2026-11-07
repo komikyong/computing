@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 모둠 편성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0fdf4; /* 연한 녹색 배경 */
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) both;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-50 to-teal-100 min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <!-- 알림 메시지 (Toast) -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-[150%] opacity-0 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg font-medium transition-all duration-300 z-50">
+        메시지 내용
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row h-auto min-h-[600px]">
+        
+        <!-- 왼쪽: 입력 영역 -->
+        <div class="w-full md:w-1/3 p-6 md:p-8 bg-gray-50 border-r border-gray-100 flex flex-col">
+            <h1 class="text-2xl font-black text-gray-800 mb-2 flex items-center gap-2">
+                <span>🧑‍🤝‍🧑</span> 모둠 편성기
+            </h1>
+            <p class="text-sm text-gray-500 mb-6">명단과 모둠 수를 입력하면 무작위로 배정합니다.</p>
+            
+            <label class="block text-sm font-bold text-gray-700 mb-2">참가자 명단</label>
+            <textarea id="name-input" 
+                class="w-full flex-grow min-h-[250px] p-4 mb-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-700 leading-relaxed" 
+                placeholder="이름을 입력하세요 (엔터로 구분)&#13;&#10;&#13;&#10;유재석&#13;&#10;강호동&#13;&#10;신동엽&#13;&#10;이경규"></textarea>
+            
+            <label class="block text-sm font-bold text-gray-700 mb-2">모둠 수 설정</label>
+            <div class="flex items-center mb-6">
+                <input type="number" id="group-count" min="2" max="20" value="3"
+                    class="w-24 p-3 text-center border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-lg font-bold text-gray-700">
+                <span class="ml-3 text-gray-600 font-medium">개 모둠으로 나누기</span>
+            </div>
+
+            <button id="generate-btn" 
+                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-md transition-all active:scale-95 flex justify-center items-center gap-2">
+                <span>✨</span> 편성하기!
+            </button>
+        </div>
+
+        <!-- 오른쪽: 결과 표시 영역 -->
+        <div class="w-full md:w-2/3 p-6 md:p-8 flex flex-col bg-white">
+            <div class="flex justify-between items-center mb-6 border-b pb-4 border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800">편성 결과</h2>
+                <div class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    총 <span id="total-people" class="font-bold text-emerald-600">0</span>명
+                </div>
+            </div>
+            
+            <!-- 모둠 카드가 그려질 그리드 -->
+            <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-4">
+                <!-- 결과가 없을 때 표시될 플레이스홀더 -->
+                <div class="col-span-full h-full flex flex-col items-center justify-center text-gray-400 py-20">
+                    <span class="text-4xl mb-3">🎲</span>
+                    <p>명단을 입력하고 편성하기 버튼을 눌러주세요.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const textarea = document.getElementById('name-input');
+        const groupCountInput = document.getElementById('group-count');
+        const generateBtn = document.getElementById('generate-btn');
+        const resultsGrid = document.getElementById('results-grid');
+        const totalPeopleSpan = document.getElementById('total-people');
+        const toast = document.getElementById('toast');
+
+        // 토스트 메시지 띄우기 (alert 대체)
+        function showToast(message, isError = true) {
+            toast.textContent = message;
+            if (isError) {
+                toast.classList.replace('bg-emerald-600', 'bg-red-500');
+            } else {
+                toast.classList.replace('bg-red-500', 'bg-emerald-600');
+            }
+            
+            toast.classList.remove('-translate-y-[150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-[150%]', 'opacity-0');
+            }, 3000);
+        }
+
+        // 입력된 이름 목록 정제
+        function getNames() {
+            return textarea.value
+                .split('\n')
+                .map(n => n.trim())
+                .filter(n => n.length > 0);
+        }
+
+        // 배열 무작위 섞기 (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // 모둠 편성 로직
+        generateBtn.addEventListener('click', () => {
+            const names = getNames();
+            const groupCount = parseInt(groupCountInput.value, 10);
+
+            // 입력 검증
+            if (names.length === 0) {
+                showToast("편성할 명단을 입력해주세요.");
+                textarea.focus();
+                return;
+            }
+            if (isNaN(groupCount) || groupCount < 1) {
+                showToast("모둠 수는 1개 이상이어야 합니다.");
+                groupCountInput.focus();
+                return;
+            }
+            if (groupCount > names.length) {
+                showToast(`사람 수(${names.length}명)보다 모둠 수가 많을 수 없습니다.`);
+                return;
+            }
+
+            // UI 상단 총 인원수 갱신
+            totalPeopleSpan.textContent = names.length;
+
+            // 1. 명단 섞기
+            const shuffledNames = shuffleArray(names);
+
+            // 2. 모둠 배열 초기화
+            const groups = Array.from({ length: groupCount }, () => []);
+
+            // 3. 순차적으로 고르게 분배 (라운드 로빈)
+            shuffledNames.forEach((name, index) => {
+                const groupIndex = index % groupCount;
+                groups[groupIndex].push(name);
+            });
+
+            // 4. 결과 화면에 렌더링
+            renderResults(groups);
+            showToast("모둠 편성이 완료되었습니다!", false);
+        });
+
+        // 결과를 DOM에 그리는 함수
+        function renderResults(groups) {
+            resultsGrid.innerHTML = ''; // 기존 결과 초기화
+
+            groups.forEach((group, index) => {
+                // 모둠 카드 생성
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-sm fade-in-up';
+                card.style.animationDelay = `${index * 0.05}s`; // 순차적 애니메이션 효과
+
+                // 카드 헤더 (모둠 번호 및 인원수)
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center mb-4 border-b border-gray-200 pb-2';
+                header.innerHTML = `
+                    <h3 class="font-black text-emerald-700 text-lg">${index + 1}모둠</h3>
+                    <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md">${group.length}명</span>
+                `;
+                card.appendChild(header);
+
+                // 모둠원 리스트 생성
+                const list = document.createElement('ul');
+                list.className = 'space-y-2';
+
+                group.forEach(member => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center text-gray-700 text-sm font-medium';
+                    li.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 mr-2"></span> ${member}`;
+                    list.appendChild(li);
+                });
+
+                card.appendChild(list);
+                resultsGrid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
