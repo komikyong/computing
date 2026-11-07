@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생 답안 결과 다운로드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', 'Malgun Gothic', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- 상단 헤더 및 버튼 영역 -->
+        <header class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm mb-6 border border-gray-200">
+            <div class="text-center md:text-left mb-4 md:mb-0">
+                <h1 class="text-2xl font-extrabold text-gray-800 flex items-center justify-center md:justify-start">
+                    <span class="text-3xl mr-3">📊</span> 학습지 실시간 결과
+                </h1>
+                <p class="text-gray-500 mt-1 text-sm">학생들이 제출한 답안이 아래 표에 실시간으로 업데이트됩니다.</p>
+            </div>
+            
+            <button id="downloadBtn" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                CSV 엑셀 다운로드
+            </button>
+        </header>
+
+        <!-- 데이터 테이블 영역 -->
+        <main class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 font-bold whitespace-nowrap">제출일시</th>
+                            <th scope="col" class="px-4 py-4 font-bold text-center whitespace-nowrap">학년</th>
+                            <th scope="col" class="px-4 py-4 font-bold text-center whitespace-nowrap">반</th>
+                            <th scope="col" class="px-4 py-4 font-bold text-center whitespace-nowrap">번호</th>
+                            <th scope="col" class="px-6 py-4 font-bold text-center whitespace-nowrap">이름</th>
+                            <th scope="col" class="px-6 py-4 font-bold whitespace-nowrap">1번(객)</th>
+                            <th scope="col" class="px-6 py-4 font-bold whitespace-nowrap">2번(객)</th>
+                            <th scope="col" class="px-6 py-4 font-bold whitespace-nowrap">3번(객)</th>
+                            <th scope="col" class="px-6 py-4 font-bold text-blue-700 whitespace-nowrap">4번(주관식)</th>
+                            <th scope="col" class="px-6 py-4 font-bold text-blue-700 whitespace-nowrap">5번(주관식)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100">
+                        <!-- 초기 로딩 상태 -->
+                        <tr>
+                            <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                                <svg class="animate-spin mx-auto h-8 w-8 text-blue-500 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                데이터를 불러오는 중입니다...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- 알림 메시지 공간 -->
+        <p id="statusMessage" class="mt-6 text-center text-sm font-medium text-gray-600 hidden transition-opacity duration-300"></p>
+    </div>
+
+    <!-- Firebase 및 데이터 처리 로직 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3Xt-5cjLS6FENfA65mcwstoqMQNCzokk",
+            authDomain: "vibecoding-a1519.firebaseapp.com",
+            projectId: "vibecoding-a1519",
+            storageBucket: "vibecoding-a1519.firebasestorage.app",
+            messagingSenderId: "544634316139",
+            appId: "1:544634316139:web:1b79a497143989edd8182e",
+            measurementId: "G-PV37LMZHML"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const tableBody = document.getElementById('tableBody');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // 다운로드용 캐시 데이터
+        let cachedRecords = [];
+
+        // 알림 메시지 유틸리티
+        const showMessage = (msg, type = 'success') => {
+            statusMessage.innerText = msg;
+            statusMessage.className = `mt-6 text-center text-sm font-bold ${type === 'error' ? 'text-red-500' : 'text-green-600'}`;
+            statusMessage.classList.remove('hidden');
+            setTimeout(() => statusMessage.classList.add('hidden'), 3000);
+        };
+
+        // Firestore 실시간 데이터 가져오기
+        const q = query(collection(db, "science_worksheets"), orderBy("timestamp", "asc"));
+        
+        onSnapshot(q, (snapshot) => {
+            cachedRecords = [];
+            tableBody.innerHTML = ''; 
+
+            if (snapshot.empty) {
+                tableBody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-500 font-medium">아직 제출된 학생 답안이 없습니다.</td></tr>`;
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const answers = data.answers || {};
+                const time = data.timestamp ? data.timestamp.toDate().toLocaleString('ko-KR') : "시간 없음";
+
+                cachedRecords.push({
+                    time, grade: data.grade || '', classNum: data.classNum || '',
+                    studentNum: data.studentNum || '', name: data.name || '',
+                    q1: answers.q1 || '', q2: answers.q2 || '', q3: answers.q3 || '',
+                    q4: answers.q4 || '', q5: answers.q5 || ''
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50 transition-colors duration-150";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${time}</td>
+                    <td class="px-4 py-4 text-center font-medium">${data.grade}</td>
+                    <td class="px-4 py-4 text-center font-medium">${data.classNum}</td>
+                    <td class="px-4 py-4 text-center font-medium">${data.studentNum}</td>
+                    <td class="px-6 py-4 text-center font-extrabold text-gray-900 bg-gray-50/50">${data.name}</td>
+                    <td class="px-6 py-4">${answers.q1 || '-'}</td>
+                    <td class="px-6 py-4">${answers.q2 || '-'}</td>
+                    <td class="px-6 py-4">${answers.q3 || '-'}</td>
+                    <td class="px-6 py-4 text-blue-700 font-medium">${answers.q4 || '-'}</td>
+                    <td class="px-6 py-4 text-blue-700 font-medium">${answers.q5 || '-'}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }, (error) => {
+            console.error("Firestore 실시간 수신 에러:", error);
+            tableBody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-red-500 font-bold">데이터를 불러오는 중 오류가 발생했습니다. 권한 설정을 확인하세요.</td></tr>`;
+        });
+
+        // CSV 다운로드 버튼 이벤트
+        downloadBtn.addEventListener('click', () => {
+            if (cachedRecords.length === 0) {
+                showMessage("다운로드할 데이터가 없습니다.", "error");
+                return;
+            }
+
+            // 한글 깨짐 방지 BOM 추가
+            let csvContent = "\uFEFF"; 
+            csvContent += "제출일시,학년,반,번호,이름,1번 답,2번 답,3번 답,4번 답,5번 답\n";
+
+            const escape = (str) => `"${String(str).replace(/"/g, '""')}"`;
+
+            cachedRecords.forEach(record => {
+                const row = [
+                    escape(record.time), escape(record.grade), escape(record.classNum),
+                    escape(record.studentNum), escape(record.name),
+                    escape(record.q1), escape(record.q2), escape(record.q3),
+                    escape(record.q4), escape(record.q5)
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            // 파일 다운로드 생성
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            const dateStr = new Date().toISOString().split('T')[0];
+            link.setAttribute("href", url);
+            link.setAttribute("download", `학생답안결과_${dateStr}.csv`);
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showMessage("CSV 다운로드가 완료되었습니다!");
+        });
+    </script>
+</body>
+</html>
