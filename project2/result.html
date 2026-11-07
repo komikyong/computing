@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생 답안 결과 다운로드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', 'Malgun Gothic', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-10 px-4 flex flex-col items-center justify-center">
+
+    <main class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl text-center">
+        <div class="text-5xl mb-4">📊</div>
+        <h1 class="text-2xl font-extrabold text-gray-800 mb-2">학습지 제출 결과</h1>
+        <p class="text-gray-500 mb-8">학생들이 제출한 답안을 CSV 파일로 다운로드합니다.<br>(엑셀에서 열어볼 수 있습니다)</p>
+        
+        <button id="downloadBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all text-lg flex items-center justify-center">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            CSV 파일 다운로드
+        </button>
+
+        <p id="statusMessage" class="mt-4 text-sm font-medium text-gray-600 hidden"></p>
+    </main>
+
+    <!-- Firebase 및 CSV 다운로드 로직 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase 설정 (제공해주신 정보)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPvVKjUZUbzsog7K9qSkl3-JLIVs-_RB8",
+            authDomain: "computing-3ed50.firebaseapp.com",
+            projectId: "computing-3ed50",
+            storageBucket: "computing-3ed50.firebasestorage.app",
+            messagingSenderId: "345956328287",
+            appId: "1:345956328287:web:3b702bce02f81ba2298cea"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        downloadBtn.addEventListener('click', async () => {
+            try {
+                // UI 상태 변경 (로딩 중)
+                downloadBtn.disabled = true;
+                downloadBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                statusMessage.classList.remove('hidden');
+                statusMessage.innerText = "데이터를 불러오는 중입니다...";
+                statusMessage.className = "mt-4 text-sm font-medium text-blue-600";
+
+                // Firestore에서 데이터 가져오기 (제출 시간 오름차순 정렬)
+                const q = query(collection(db, "science_worksheets"), orderBy("timestamp", "asc"));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    statusMessage.innerText = "아직 제출된 학생 답안이 없습니다.";
+                    statusMessage.className = "mt-4 text-sm font-medium text-red-500";
+                    return;
+                }
+
+                // CSV 데이터 생성 (한글 깨짐 방지를 위한 BOM 문자 \uFEFF 추가)
+                let csvContent = "\uFEFF"; 
+                // CSV 헤더 생성
+                csvContent += "제출일시,학년,반,번호,이름,1번 답,2번 답,3번 답,4번 답,5번 답\n";
+
+                // 각 문서 데이터를 순회하며 CSV 행 추가
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const answers = data.answers || {};
+                    
+                    // 서버 타임스탬프를 보기 좋은 시간 문자열로 변환
+                    const time = data.timestamp ? data.timestamp.toDate().toLocaleString('ko-KR') : "시간 없음";
+
+                    // CSV 포맷에 맞게 문자열 내의 따옴표나 쉼표를 안전하게 이스케이프(Escape) 처리
+                    const escape = (str) => {
+                        const s = str ? String(str) : "";
+                        return `"${s.replace(/"/g, '""')}"`;
+                    };
+
+                    const row = [
+                        escape(time),
+                        escape(data.grade),
+                        escape(data.classNum),
+                        escape(data.studentNum),
+                        escape(data.name),
+                        escape(answers.q1),
+                        escape(answers.q2),
+                        escape(answers.q3),
+                        escape(answers.q4),
+                        escape(answers.q5)
+                    ];
+
+                    csvContent += row.join(",") + "\n";
+                });
+
+                // 브라우저에서 다운로드 파일 생성 및 클릭 이벤트 발생
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                
+                // 파일명 설정 (예: 학생답안결과_2026-11-07.csv)
+                const dateStr = new Date().toISOString().split('T')[0];
+                link.setAttribute("href", url);
+                link.setAttribute("download", `학생답안결과_${dateStr}.csv`);
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link); // 임시 링크 삭제
+
+                // 성공 메시지 표시
+                statusMessage.innerText = "다운로드가 완료되었습니다!";
+                statusMessage.className = "mt-4 text-sm font-medium text-green-600";
+
+            } catch (error) {
+                console.error("데이터 다운로드 에러:", error);
+                statusMessage.innerText = "다운로드 중 오류가 발생했습니다. 권한 및 네트워크를 확인해주세요.";
+                statusMessage.className = "mt-4 text-sm font-medium text-red-500";
+            } finally {
+                // 버튼 상태 복구
+                downloadBtn.disabled = false;
+                downloadBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        });
+    </script>
+</body>
+</html>
